@@ -117,6 +117,8 @@ def save_setting_cache(item, dict_data_saved):
             root = ET.Element("advancedsettings")
     else:
         root = ET.Element("advancedsettings")
+        
+    root.set('version', '1.0')
 
     cache = root.find(CACHETAG)
     if cache is None:
@@ -152,8 +154,7 @@ def save_setting_cache(item, dict_data_saved):
 
 
 def get_xml_path():
-    userdata_path = filetools.translatePath('special://home/userdata')
-    return filetools.join(userdata_path, 'advancedsettings.xml')
+    return filetools.translatePath('special://profile/advancedsettings.xml')
 
 
 def get_cache_settings():
