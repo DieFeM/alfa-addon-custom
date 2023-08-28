@@ -5,7 +5,6 @@
 
 from channelselector import get_thumb
 from core.item import Item
-from platformcode import config, logger
 import xml.etree.ElementTree as ET
 from core import filetools
 from platformcode import logger, config, platformtools
