@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET
 from core import filetools
 from platformcode import logger, config, platformtools
 import sys
+import xbmc
+from re import sub
 
 PY3 = False
 if sys.version_info[0] >= 3: PY3 = True; unicode = str; unichr = chr; long = int
@@ -157,26 +159,41 @@ def get_xml_path():
 
 
 def get_cache_settings():
-    return {MODETAG:   {'0': 'Buffer all internet filesystems (default)', 
-                        '1': 'Buffer all filesystems, both internet and local (recommended)', 
-                        '2': 'Only buffer true internet filesystems (streams)', 
-                        '3': 'No buffer', 
-                        '4': 'All network filesystems (incl. smb, nfs, etc.)'},
-            MEMORYTAG: {'20971520':   '20MB buffer, requires 60MB of free RAM (default)',
-                        '52428800':   '50MB buffer, requires 150MB of free RAM', 
-                        '104857600':  '100MB buffer, requires 300MB of free RAM', 
-                        '139460608':  '133MB buffer, requires 400MB of free RAM (recommended)',
-                        '278921216':  '266MB buffer, requires 800MB of free RAM',
-                        '349175808':  '333MB buffer, requires 1GB of free RAM',
-                        '1073741824': '1GB buffer, requires 3GB of free RAM',
-                        '2863311530': '2.6GB buffer, requires 8GB of free RAM',
-                        '0':          'Use local drive, requires 16GB+ of free space.'},
-            FACTORTAG: {'4':  '4X fill-rate (default)', 
-                        '10': '10X fill-rate', 
-                        '20': '20X fill-rate (recommended)', 
-                        '30': '30X fill-rate', 
-                        '40': '40X fill-rate'}
-           }
+    settings = { MODETAG:  {'0': 'Buffer all internet filesystems (default)', 
+                            '1': 'Buffer all filesystems, both internet and local (recommended)', 
+                            '2': 'Only buffer true internet filesystems (streams)', 
+                            '3': 'No buffer', 
+                            '4': 'All network filesystems (incl. smb, nfs, etc.)'},
+                MEMORYTAG: {'20971520':   '20MB buffer, requires 60MB of free RAM (default)',
+                            '52428800':   '50MB buffer, requires 150MB of free RAM', 
+                            '104857600':  '100MB buffer, requires 300MB of free RAM', 
+                            '139460608':  '133MB buffer, requires 400MB of free RAM (recommended)',
+                            '278921216':  '266MB buffer, requires 800MB of free RAM',
+                            '349175808':  '333MB buffer, requires 1GB of free RAM',
+                            '1073741824': '1GB buffer, requires 3GB of free RAM',
+                            '2863311530': '2.6GB buffer, requires 8GB of free RAM',
+                            '0':          'Use local drive, requires 16GB+ of free space.'},
+                FACTORTAG: {'4':  '4X fill-rate (default)', 
+                            '10': '10X fill-rate', 
+                            '20': '20X fill-rate (recommended)', 
+                            '30': '30X fill-rate', 
+                            '40': '40X fill-rate'}
+               }
+
+    # free drive in GB
+    free_drv = int(sub('\s*[^\d]+$', '', xbmc.getInfoLabel('System.FreeSpace'))) // 1024
+    # free mem in KB
+    free_mem = int(sub('\s*[^\d]+$', '', xbmc.getInfoLabel('System.FreeMemory'))) * 1048576 
+
+    if free_drv < 16:
+        del settings[MEMORYTAG]['0']
+
+    for size in list(settings[MEMORYTAG]):
+        if (int(size) * 3) > free_mem:
+            del settings[MEMORYTAG][size]
+
+    # logger.info('free_drv: ' + str(free_drv) +', free_mem: ' + str(free_mem), True)
+    return settings
 
 
 def cleanTails(root):
