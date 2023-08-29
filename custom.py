@@ -34,48 +34,15 @@ def mainlist(item):
 
 
 def video_cache_config(item):
-    xml_path = get_xml_path()
-
-    if filetools.exists(xml_path):
-        try:
-            tree = ET.parse(xml_path)
-            root = tree.getroot()
-        except:
-            root = ET.Element("advancedsettings")
-    else:
-        root = ET.Element("advancedsettings")
-
-    cache = root.find(CACHETAG)
-    if cache is None:
-        cache = ET.SubElement(root, CACHETAG)
-
-    buffermode = cache.find(MODETAG)
-    if buffermode is None:
-        buffermode = ET.SubElement(cache, MODETAG)
-        buffermode.text = '0'
-
-    memorysize = cache.find(MEMORYTAG)
-    if memorysize is None:
-        memorysize = ET.SubElement(cache, MEMORYTAG)
-        memorysize.text = '20971520'
-
-    readfactor = cache.find(FACTORTAG)
-    if readfactor is None:
-        readfactor = ET.SubElement(cache, FACTORTAG)
-        readfactor.text = '4'
-
     settings = get_cache_settings()
-
-    buffermode_selected = get_dict_index(settings[MODETAG], buffermode.text)
-    memorysize_selected = get_dict_index(settings[MEMORYTAG], memorysize.text)
-    readfactor_selected = get_dict_index(settings[FACTORTAG], readfactor.text)
+    cache = get_cache_elem(get_root_elem(get_xml_path()))
 
     list_controls = [
         {
             "id": MODETAG,
             "type": "list",
             "label": MODETAG,
-            "default": buffermode_selected,
+            "default": get_selected(MODETAG,   settings, cache, '0'),
             "enabled": True,
             "visible": True,
             "lvalues": list(settings[MODETAG].values())
@@ -84,7 +51,7 @@ def video_cache_config(item):
             "id": MEMORYTAG,
             "type": "list",
             "label": MEMORYTAG,
-            "default": memorysize_selected,
+            "default": get_selected(MEMORYTAG, settings, cache, '20971520'),
             "enabled": True,
             "visible": True,
             "lvalues": list(settings[MEMORYTAG].values())
@@ -93,7 +60,7 @@ def video_cache_config(item):
             "id": FACTORTAG,
             "type": "list",
             "label": FACTORTAG,
-            "default": readfactor_selected,
+            "default": get_selected(FACTORTAG, settings, cache, '4'),
             "enabled": True,
             "visible": True,
             "lvalues": list(settings[FACTORTAG].values())
@@ -108,43 +75,12 @@ def save_setting_cache(item, dict_data_saved):
     # logger.info(dict_data_saved, True)
     settings = get_cache_settings()
     xml_path = get_xml_path()
-    
-    if filetools.exists(xml_path):
-        try:
-            tree = ET.parse(xml_path)
-            root = tree.getroot()
-            clean_tails(root)
-        except:
-            root = ET.Element("advancedsettings")
-    else:
-        root = ET.Element("advancedsettings")
-        
-    root.set('version', '1.0')
+    root = get_root_elem(xml_path)
+    cache = get_cache_elem(root)
 
-    cache = root.find(CACHETAG)
-    if cache is None:
-        cache = ET.SubElement(root, CACHETAG)
-
-    buffermode = cache.find(MODETAG)
-    if buffermode is None:
-        buffermode = ET.SubElement(cache, MODETAG)
-    i = dict_data_saved[MODETAG]
-    data = get_dict_by_index(settings[MODETAG], int(i))
-    buffermode.text = data[0]
-
-    memorysize = cache.find(MEMORYTAG)
-    if memorysize is None:
-        memorysize = ET.SubElement(cache, MEMORYTAG)
-    i = dict_data_saved[MEMORYTAG]
-    data = get_dict_by_index(settings[MEMORYTAG], int(i))
-    memorysize.text = data[0]
-
-    readfactor = cache.find(FACTORTAG)
-    if readfactor is None:
-        readfactor = ET.SubElement(cache, FACTORTAG)
-    i = dict_data_saved[FACTORTAG]
-    data = get_dict_by_index(settings[FACTORTAG], int(i))
-    readfactor.text = data[0]
+    set_data(MODETAG,   settings, cache, dict_data_saved)
+    set_data(MEMORYTAG, settings, cache, dict_data_saved)
+    set_data(FACTORTAG, settings, cache, dict_data_saved)
 
     encoding = 'unicode' if PY3 else 'utf-8'
     xmlstr = ET.tostring(root, encoding=encoding)
@@ -156,6 +92,43 @@ def save_setting_cache(item, dict_data_saved):
 
 def get_xml_path():
     return filetools.translatePath('special://profile/advancedsettings.xml')
+
+
+def get_root_elem(xml_path):
+    if filetools.exists(xml_path):
+        try:
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+            clean_tails(root)
+        except:
+            root = ET.Element("advancedsettings")
+    else:
+        root = ET.Element("advancedsettings")
+
+    root.set('version', '1.0')
+    return root
+
+
+def get_cache_elem(root):
+    cache = root.find(CACHETAG)
+    if cache is None:
+        cache = ET.SubElement(root, CACHETAG)
+    return cache
+
+
+def set_data(tag, settings, cache, data):
+    item = cache.find(tag)
+    if item is None:
+        item = ET.SubElement(cache, tag)
+    item.text = get_dict_by_index(settings[tag], int(data[tag]))[0]
+
+
+def get_selected(tag, settings, cache, default):
+    item = cache.find(tag)
+    if item is None:
+        item = ET.SubElement(cache, tag)
+        item.text = default
+    return get_dict_index(settings[tag], item.text)
 
 
 def get_cache_settings():
