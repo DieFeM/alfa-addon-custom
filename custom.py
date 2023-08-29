@@ -113,7 +113,7 @@ def save_setting_cache(item, dict_data_saved):
         try:
             tree = ET.parse(xml_path)
             root = tree.getroot()
-            cleanTails(root)
+            clean_tails(root)
         except:
             root = ET.Element("advancedsettings")
     else:
@@ -182,7 +182,7 @@ def get_cache_settings():
 
     # free drive in GB
     free_drv = int(sub('\s*[^\d]+$', '', xbmc.getInfoLabel('System.FreeSpace'))) // 1024
-    # free mem in KB
+    # free mem in Bytes
     free_mem = int(sub('\s*[^\d]+$', '', xbmc.getInfoLabel('System.FreeMemory'))) * 1048576 
 
     if free_drv < 16:
@@ -196,7 +196,7 @@ def get_cache_settings():
     return settings
 
 
-def cleanTails(root):
+def clean_tails(root):
     for elem in root.iter():
         if elem.tail: elem.tail = elem.tail.strip()
         if len(elem):
