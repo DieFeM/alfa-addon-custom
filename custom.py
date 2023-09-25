@@ -6,10 +6,11 @@
 from channelselector import get_thumb
 from core.item import Item
 import xml.etree.ElementTree as ET
-from core import filetools
+from core import filetools, servertools
 from platformcode import logger, config, platformtools
 import sys
 import xbmc
+import xbmcgui
 from re import sub
 
 PY3 = False
@@ -30,7 +31,16 @@ def mainlist(item):
     itemlist.append(Item(module="custom", title=config.get_localized_string(60404), action="video_cache_config",
                          config="downloads", folder=False, thumbnail=get_thumb("setting_0.png")))
 
+    itemlist.append(Item(module="custom", title="Test Links", action="test_links",
+                         config="downloads", folder=False, thumbnail=get_thumb("setting_0.png")))
     return itemlist
+
+
+def test_links(item):
+    dialog = xbmcgui.Dialog()
+    d = dialog.input('Enter link', type=xbmcgui.INPUT_ALPHANUM)
+    servername = servertools.get_server_from_url(d)
+    dialog.textviewer('Server Name', servername)
 
 
 def video_cache_config(item):
